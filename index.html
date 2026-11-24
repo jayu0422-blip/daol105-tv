@@ -82,7 +82,7 @@ const COLS = "id,course_name,teacher,subject,grade,target_school,schedule_text,r
 document.head.appendChild(Object.assign(document.createElement("style"), {textContent: DAOL_ROOM_GRID_CSS}));
 
 let shown = null, flip = 0;
-let live = false, lastPull = 0, pulling = false, again = false, ok = false;   // live: 실시간 연결됨
+let live = false, pulling = false, again = false, ok = false;   // live: 실시간 연결됨
 const dot = document.getElementById("dot");
 function setDot(){
   dot.classList.toggle("off", !ok);
@@ -142,7 +142,7 @@ async function pull(){
               getCourses: ()=>DATA, onChange: ()=>paint() });
     if(PIN && XO.setView) XO.setView(PIN.slice(0,7));
     await XO.load();
-    ok = true; lastPull = Date.now(); setDot();
+    ok = true; setDot();
     paint();
   }catch(e){ ok = false; setDot(); }
   finally{ pulling = false; if(again) setTimeout(pull, 300); }
@@ -163,7 +163,7 @@ function startRealtime(){
 }
 
 /* 1분마다 데이터 다시 읽고, 자정이 지나면 날짜가 저절로 넘어간다 */
-setInterval(()=>{ if(!live || Date.now() - lastPull > 5*60*1000) pull(); }, 60*1000);   // 실시간이 살아 있으면 5분 안전망만
+setInterval(pull, 60*1000);   // 실시간이 켜져 있어도 1분 안전망은 그대로(ops_calendar 실시간이 꺼져 있어도 늦지 않게)
 setInterval(()=>{ if(!PIN && shown && shown !== targetDate()) paint(); }, 20*1000);
 if(ROTATE) setInterval(()=>{ flip++; paint(); }, ROTATE*1000);
 /* 하루 한 번(새벽 4시대) 통째로 새로고침 — 코드가 바뀌어도 알아서 따라온다 */
