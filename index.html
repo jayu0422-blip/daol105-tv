@@ -9,7 +9,9 @@
      화면 코드와 강의실 규칙은 daol-timetable 원본을 그대로 불러와서, 앱에서 고치면 여기도 따라온다.
      ?rotate=20     오늘↔내일을 20초마다 번갈아 보여줌
      ?d=2026-11-16  그 날짜로 고정
-     ?zoom=0.9      배율 수동 지정 (없으면 화면에 맞춰 자동) -->
+     ?zoom=0.9      배율 수동 지정 (없으면 화면에 맞춰 자동)
+     ?embed=1       SYSTEM 화면 안에 끼워 보일 때(마우스 커서 보임, 새벽 새로고침 · 화면 켜 두기 안 함)
+     점 색: 초록=실시간 연결 / 주황=실시간은 끊겨 1분마다 다시 읽는 중 / 빨강=데이터를 못 읽음 -->
 <style>
 :root{--navy:#1e3a5f;--line:#e5e7eb}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -30,6 +32,7 @@ body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;color:#1f2430
 .err{padding:40px;font-size:28px;color:#b91c1c;font-weight:800}
 #dot{position:absolute;right:10px;bottom:8px;width:10px;height:10px;border-radius:50%;
      background:#22c55e;opacity:.55;transition:opacity .3s}
+#dot.poll{background:#f59e0b;opacity:.9}
 #dot.off{background:#ef4444;opacity:.9}
 .rblk.conflict{outline:none!important}
 .rblk.temp.conflict{border-color:#d97706!important}
@@ -68,6 +71,8 @@ const P = new URLSearchParams(location.search);
 const PIN = P.get("d") || "";
 const ROTATE = Math.max(0, parseInt(P.get("rotate")||"0",10));   // 초. 0이면 안 돌린다
 const ZOOM = parseFloat(P.get("zoom")||"0") || 0;
+const EMBED = P.get("embed")==="1";
+if(EMBED){ document.documentElement.style.cursor="auto"; document.body.style.cursor="auto"; }
 const BASEW = parseInt(P.get("w")||"1500",10) || 1500;   // 설계 폭
 
 const cfg = window.DAOL_CONFIG || {};
@@ -77,7 +82,13 @@ const COLS = "id,course_name,teacher,subject,grade,target_school,schedule_text,r
 document.head.appendChild(Object.assign(document.createElement("style"), {textContent: DAOL_ROOM_GRID_CSS}));
 
 let shown = null, flip = 0;
+let live = false, lastPull = 0, pulling = false, again = false, ok = false;   // live: 실시간 연결됨
 const dot = document.getElementById("dot");
+function setDot(){
+  dot.classList.toggle("off", !ok);
+  dot.classList.toggle("poll", ok && !live);
+  dot.title = !ok ? "데이터를 못 읽는 중" : live ? "실시간 연결됨" : "실시간 끊김 — 1분마다 다시 읽는 중";
+}
 
 function clock(){
   const n=new Date();
@@ -121,6 +132,8 @@ addEventListener("resize", ()=>{ fit(); setTimeout(fit,250); });
 
 async function pull(){
   if(!sb){ document.getElementById("inner").innerHTML = `<div class="err">연결 설정이 없습니다</div>`; return; }
+  if(pulling){ again = true; return; }
+  pulling = true; again = false;
   try{
     const { data:cs, error } = await sb.from("courses").select(COLS);   // 시간표에 필요한 칸만 읽는다(수강료·교재비 제외)
     if(error) throw error;
@@ -129,27 +142,43 @@ async function pull(){
               getCourses: ()=>DATA, onChange: ()=>paint() });
     if(PIN && XO.setView) XO.setView(PIN.slice(0,7));
     await XO.load();
-    dot.classList.remove("off");
+    ok = true; lastPull = Date.now(); setDot();
     paint();
-  }catch(e){ dot.classList.add("off"); }
+  }catch(e){ ok = false; setDot(); }
+  finally{ pulling = false; if(again) setTimeout(pull, 300); }
+}
+
+/* 실시간 알림 — 시간표(courses)나 월간 일정(ops_calendar)이 바뀌면 바로 다시 읽는다.
+   끊기거나 오류면 live=false 로 돌아가 아래의 1분 다시 읽기가 그대로 맡는다. */
+let rtTimer = null;
+function onChanged(){ clearTimeout(rtTimer); rtTimer = setTimeout(pull, 700); }   // 연달아 바뀌어도 한 번만
+function startRealtime(){
+  if(!sb || !sb.channel) return;
+  try{
+    sb.channel("tv-live-" + Math.random().toString(36).slice(2,8))
+      .on("postgres_changes", {event:"*", schema:"public", table:"courses"}, onChanged)
+      .on("postgres_changes", {event:"*", schema:"public", table:"ops_calendar"}, onChanged)
+      .subscribe(status => { live = (status === "SUBSCRIBED"); setDot(); });
+  }catch(e){ live = false; setDot(); }
 }
 
 /* 1분마다 데이터 다시 읽고, 자정이 지나면 날짜가 저절로 넘어간다 */
-setInterval(pull, 60*1000);
+setInterval(()=>{ if(!live || Date.now() - lastPull > 5*60*1000) pull(); }, 60*1000);   // 실시간이 살아 있으면 5분 안전망만
 setInterval(()=>{ if(!PIN && shown && shown !== targetDate()) paint(); }, 20*1000);
 if(ROTATE) setInterval(()=>{ flip++; paint(); }, ROTATE*1000);
 /* 하루 한 번(새벽 4시대) 통째로 새로고침 — 코드가 바뀌어도 알아서 따라온다 */
-setInterval(()=>{ const n=new Date(); if(n.getHours()===4 && n.getMinutes()<2) location.reload(); }, 60*1000);
+if(!EMBED) setInterval(()=>{ const n=new Date(); if(n.getHours()===4 && n.getMinutes()<2) location.reload(); }, 60*1000);
 
 /* TV가 화면을 끄지 않게 */
-(async()=>{ try{ if(navigator.wakeLock) await navigator.wakeLock.request("screen"); }catch(e){} })();
+if(!EMBED) (async()=>{ try{ if(navigator.wakeLock) await navigator.wakeLock.request("screen"); }catch(e){} })();
 document.addEventListener("visibilitychange", async ()=>{
   if(document.visibilityState === "visible"){
-    try{ if(navigator.wakeLock) await navigator.wakeLock.request("screen"); }catch(e){}
+    if(!EMBED){ try{ if(navigator.wakeLock) await navigator.wakeLock.request("screen"); }catch(e){} }
     pull();
   }
 });
 
+startRealtime();
 pull();
 </script>
 </body>
