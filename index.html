@@ -47,16 +47,18 @@ body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;color:#1f2430
 .tv .ax span{position:absolute;right:10px;transform:translateY(-50%);font-size:22px;font-weight:800;color:#94a3b8;font-variant-numeric:tabular-nums}
 .tv .ax span.h0{transform:translateY(4px)}
 .tv .col{position:relative;border-left:1px solid #e2e8f0;background-image:linear-gradient(#e2e8f0 1px,transparent 1px)}
-.tv .b{position:absolute;left:6px;right:6px;border-radius:14px;padding:10px 14px;color:#fff;background:var(--c);overflow:hidden;
-       display:flex;flex-direction:column;gap:4px;box-shadow:0 2px 4px rgba(15,23,42,.12)}
+/* 원장 11/28 「색이 너무 쨍해」 — 과목 색을 옅게 깔고 왼쪽 막대 · 반 이름에만 진하게. 클리닉은 거의 흰 바탕 + 가는 막대. */
+.tv .b{position:absolute;left:6px;right:6px;border-radius:14px;padding:10px 14px 10px 24px;overflow:hidden;
+       color:var(--k);background:var(--bg);border:2px solid var(--bd);box-shadow:inset 9px 0 0 var(--c);
+       display:flex;flex-direction:column;gap:4px}
 .tv .b .n{font-size:28px;font-weight:900;line-height:1.15;letter-spacing:-.8px}
-.tv .b .m{font-size:21px;font-weight:700;opacity:.92;font-variant-numeric:tabular-nums}
-.tv .b .tg{align-self:flex-start;font-size:17px;font-weight:900;border-radius:7px;padding:1px 9px;background:rgba(255,255,255,.25)}
-.tv .b.cl{background:color-mix(in srgb,var(--c) 16%,#fff);color:color-mix(in srgb,var(--c) 82%,#000);box-shadow:inset 8px 0 0 var(--c);padding-left:20px}
+.tv .b .m{font-size:21px;font-weight:700;color:#475569;font-variant-numeric:tabular-nums}
+.tv .b .tg{align-self:flex-start;font-size:17px;font-weight:900;border-radius:7px;padding:1px 9px;background:var(--c);color:#fff}
+.tv .b.cl{background:var(--bg2);border-color:var(--bd2);box-shadow:inset 4px 0 0 var(--c);padding-left:20px}
 .tv .b.cl .tg{background:var(--c);color:#fff}
-.tv .b.tmp{background:#fef3c7;color:#78350f;border:3px dashed #d97706;box-shadow:none}
+.tv .b.tmp{background:#fdf6e3;color:#78350f;border:3px dashed #d6a24a;box-shadow:none}
 .tv .b.tmp .tg{background:#d97706;color:#fff}
-.tv .b.off{background:#e2e8f0;color:#64748b;box-shadow:none}
+.tv .b.off{background:#f1f5f9;color:#64748b;border-color:#e2e8f0;box-shadow:none}
 .tv .b.off .n{text-decoration:line-through}
 .tv .b.off .tg{background:#64748b;color:#fff}
 .tv .b.sm .m:last-of-type{display:none}
@@ -156,16 +158,20 @@ function targetDate(){
 
 /* 큰 글씨 강의실 그리드 — 원장 11/28 「더 깔끔하고 글씨가 크게 잘 보이게」.
    XO.assignForDate 가 돌려준 그날 수업(SYSTEM) + 월간 일정 덧칸(직보 · 설명회 · 휴강 · 이날만 지정)을 그대로 쓴다. */
-const SUBJ_TV = { "영어": "#15803d", "수학": "#1d4ed8", "국어": "#c2410c", "과학": "#7c3aed" };
+const SUBJ_TV = { "영어": "#3f8a5c", "수학": "#4f72b8", "국어": "#c0703f", "과학": "#7f68b5" };   // 채도 낮춘 과목 색(원장 11/28)
 const cleanName = s => String(s || "").replace(/^\s*2\dY\s*/, "").replace(/\s*-\s*정규\s*$|\s*정규반?\s*$/, "").replace(/\s+/g, " ").trim();
 const hhmm = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
+/* 색 섞기(흰색 · 검정과) — CSS color-mix 를 못 쓰는 오래된 TV 브라우저용 */
+const mixHex = (hex, pct, base) => { const h = hex.replace("#", ""), b = base === "black" ? 0 : 255;
+  return "#" + [0, 2, 4].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * pct + b * (1 - pct)).toString(16).padStart(2, "0")).join(""); };
+const toneVars = c => `--c:${c};--bg:${mixHex(c, .17)};--bd:${mixHex(c, .38)};--bg2:${mixHex(c, .04)};--bd2:${mixHex(c, .24)};--k:${mixHex(c, .8, "black")}`;
 function bigGridHTML(d, A){
   const blocks = [];
   A.items.forEach(it => blocks.push({ room: it.room, a: it.s.start, b: it.s.end, kind: it.off ? "off" : (it.s.type === "정규" ? "les" : "cl"),
     name: cleanName(it.c.course_name), who: it.c.teacher, c: SUBJ_TV[it.c.subject] || "#475569",
     tag: it.off ? "휴강" : it.overridden ? "이날만 이 방" : (it.s.type === "정규" ? "" : "클리닉") }));
   (A.temps || []).forEach(b => blocks.push({ room: b.room, a: b.start, b: b.end, kind: "tmp", name: cleanName(b.name), who: b.teacher || "",
-    c: "#d97706", tag: RM_tempLabel(b.type) }));
+    c: "#c98a2e", tag: RM_tempLabel(b.type) }));
   const shown = blocks.filter(x => x.room && x.a != null);
   if (!shown.length) return `<div class="tv"><div class="none">오늘은 수업이 없습니다</div></div>`;
   const rooms = CLASS_ROOMS.filter(r => shown.some(x => x.room === r.key));
@@ -185,7 +191,7 @@ function bigGridHTML(d, A){
     const list = shown.filter(x => x.room === r.key).sort((p, q) => p.a - q.a);
     list.forEach(x => {
       const top = (x.a - from) / 60 * PX + 3, h = (x.b - x.a) / 60 * PX - 6;
-      html += `<div class="b ${x.kind === "les" ? "" : x.kind} ${h < 100 ? "sm" : ""}" style="--c:${x.c};top:${top}px;height:${h}px">` +
+      html += `<div class="b ${x.kind === "les" ? "" : x.kind} ${h < 100 ? "sm" : ""}" style="${toneVars(x.c)};top:${top}px;height:${h}px">` +
         `<div class="n">${esc(x.name)}</div>` +
         (x.tag ? `<span class="tg">${esc(x.tag)}</span>` : "") +
         `<div class="m">${hhmm(x.a)}–${hhmm(x.b)}</div>` +
