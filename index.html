@@ -6,12 +6,14 @@
 <meta name="robots" content="noindex">
 <title>다올105 강의실 시간표</title>
 <!-- 스마트 TV 전용 보기 화면. 오늘 강의실 시간표만 보여 주고 입력·이동 링크가 없다.
-     화면 코드와 강의실 규칙은 daol-timetable 원본을 그대로 불러와서, 앱에서 고치면 여기도 따라온다.
+     2026-11-28 원장: 반 · 시간 · 강의실은 SYSTEM 반 시간표 하나가 기준(/api/ext/hallway) — SYSTEM 「복도 시간표」에서
+     인포 · 원장이 강의실을 바꾸면 30초 안에 따라온다. 이날만 바꾸기 · 휴강 · 직보 · 설명회는 예전처럼 시간표 앱 월간 일정(ops_calendar).
+     화면 그림(dayGridHTML)은 daol-timetable 원본을 그대로 불러온다.
      ?rotate=20     오늘↔내일을 20초마다 번갈아 보여줌
      ?d=2026-11-16  그 날짜로 고정
      ?zoom=0.9      배율 수동 지정 (없으면 화면에 맞춰 자동)
      ?embed=1       SYSTEM 화면 안에 끼워 보일 때(마우스 커서 보임, 새벽 새로고침 · 화면 켜 두기 안 함)
-     점 색: 초록=실시간 연결 / 주황=실시간은 끊겨 1분마다 다시 읽는 중 / 빨강=데이터를 못 읽음 -->
+     점 색: 초록=SYSTEM 읽기 정상 · 월간 일정 실시간 / 주황=월간 일정 실시간 끊김(30초마다 다시 읽음) / 빨강=SYSTEM 을 못 읽음 -->
 <style>
 :root{--navy:#1e3a5f;--line:#e5e7eb}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -78,7 +80,32 @@ const BASEW = parseInt(P.get("w")||"1500",10) || 1500;   // 설계 폭
 const cfg = window.DAOL_CONFIG || {};
 const sb = (cfg.url && cfg.anonKey && window.supabase) ? window.supabase.createClient(cfg.url, cfg.anonKey) : null;
 const XO = window.DaolExamOps;
-const COLS = "id,course_name,teacher,subject,grade,target_school,schedule_text,room_overrides";
+const SYSTEM_FEED = "https://daol105-system-two.vercel.app/api/ext/hallway";
+const ROOM_KEYS = CLASS_ROOMS.map(r => r.key);
+const toMin = t => { const m = /(\d{1,2}):(\d{2})/.exec(t || ""); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+
+/* SYSTEM 반 → 이 화면이 쓰던 강좌 모양. 강의실은 SYSTEM 값 그대로, 「미정」만 예전 자동 배정 규칙으로 빈 방을 추천한다. */
+function fromSystem(classes){
+  return classes.map(c => ({ id: c.id, course_name: String(c.name || "").replace(/^\s*2\dY\s*/, ""), teacher: c.teacher || "",
+    subject: c.subject || "", grade: c.grade || "", target_school: "", schedule_text: "", room_overrides: {}, sessions: c.sessions || [] }));
+}
+function assignDaySystem(day){
+  const items = [], occ = {}; ROOM_KEYS.forEach(k => occ[k] = []);
+  const tbd = [];
+  DATA.forEach(c => c.sessions.forEach(s => {
+    if (s.dow !== day) return;
+    const a = toMin(s.start); if (a == null) return;
+    const b = toMin(s.end); const end = b != null && b > a ? b : a + 90;
+    const type = /클리닉|관리/.test(s.tag || "") ? "클리닉" : "정규";
+    const it = { c, s: { day, start: a, end, type } };
+    if (ROOM_KEYS.includes(s.room)) { it.room = s.room; occ[s.room].push(it.s); items.push(it); } else tbd.push(it);
+  }));
+  tbd.sort((x, y) => x.s.start - y.s.start).forEach(it => {
+    const free = orderByPref(it.c.teacher, day, ROOM_KEYS).find(k => !occ[k].some(x => ovl(x, it.s)));
+    it.room = free || ROOM_KEYS[0]; it.spill = true; occ[it.room].push(it.s); items.push(it);
+  });
+  return { items, unparsed: [] };
+}
 document.head.appendChild(Object.assign(document.createElement("style"), {textContent: DAOL_ROOM_GRID_CSS}));
 
 let shown = null, flip = 0;
@@ -131,17 +158,17 @@ function fit(){
 addEventListener("resize", ()=>{ fit(); setTimeout(fit,250); });
 
 async function pull(){
-  if(!sb){ document.getElementById("inner").innerHTML = `<div class="err">연결 설정이 없습니다</div>`; return; }
   if(pulling){ again = true; return; }
   pulling = true; again = false;
   try{
-    const { data:cs, error } = await sb.from("courses").select(COLS);   // 시간표에 필요한 칸만 읽는다(수강료·교재비 제외)
-    if(error) throw error;
-    DATA = cs||[];
-    XO.init({ sb, teachers:[], rooms:CLASS_ROOMS, assignDay, orderByPref,
+    const r = await fetch(SYSTEM_FEED, { cache: "no-store" });   // 수업 중 반의 이름 · 선생님 · 과목 · 학년 · 시간 · 강의실만
+    const j = await r.json();
+    if(!r.ok || !j.ok) throw new Error(j.error || r.status);
+    DATA = fromSystem(j.classes || []);
+    XO.init({ sb, teachers:[], rooms:CLASS_ROOMS, assignDay: assignDaySystem, orderByPref,
               getCourses: ()=>DATA, onChange: ()=>paint() });
     if(PIN && XO.setView) XO.setView(PIN.slice(0,7));
-    await XO.load();
+    if(sb) await XO.load();   // 월간 일정(이날만 · 휴강 · 직보 · 설명회) — 못 읽어도 SYSTEM 시간표는 그린다
     ok = true; setDot();
     paint();
   }catch(e){ ok = false; setDot(); }
@@ -156,14 +183,13 @@ function startRealtime(){
   if(!sb || !sb.channel) return;
   try{
     sb.channel("tv-live-" + Math.random().toString(36).slice(2,8))
-      .on("postgres_changes", {event:"*", schema:"public", table:"courses"}, onChanged)
       .on("postgres_changes", {event:"*", schema:"public", table:"ops_calendar"}, onChanged)
       .subscribe(status => { live = (status === "SUBSCRIBED"); setDot(); });
   }catch(e){ live = false; setDot(); }
 }
 
 /* 1분마다 데이터 다시 읽고, 자정이 지나면 날짜가 저절로 넘어간다 */
-setInterval(pull, 60*1000);   // 실시간이 켜져 있어도 1분 안전망은 그대로(ops_calendar 실시간이 꺼져 있어도 늦지 않게)
+setInterval(pull, 30*1000);   // SYSTEM 시간표는 30초마다 다시 읽는다(SYSTEM 쪽 캐시도 30초)
 setInterval(()=>{ if(!PIN && shown && shown !== targetDate()) paint(); }, 20*1000);
 if(ROTATE) setInterval(()=>{ flip++; paint(); }, ROTATE*1000);
 /* 하루 한 번(새벽 4시대) 통째로 새로고침 — 코드가 바뀌어도 알아서 따라온다 */
