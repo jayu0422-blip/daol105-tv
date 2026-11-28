@@ -16,7 +16,7 @@
      ?embed=1       SYSTEM 화면 안에 끼워 보일 때(마우스 커서 보임, 새벽 새로고침 · 화면 켜 두기 안 함)
      점 색: 초록=SYSTEM 읽기 정상 · 월간 일정 실시간 / 주황=월간 일정 실시간 끊김(30초마다 다시 읽음) / 빨강=SYSTEM 을 못 읽음 -->
 <style>
-:root{--navy:#1e3a5f;--line:#e5e7eb}
+:root{--navy:#1B2A3A;--line:#E1E5E9}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;background:#fff;cursor:none}
 body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;color:#1f2430}
@@ -25,49 +25,52 @@ body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;color:#1f2430
      background:var(--navy);color:#fff}
 .bar .d{font-size:34px;font-weight:900;letter-spacing:-1px}
 .bar .w{font-size:26px;font-weight:800;opacity:.9}
-.bar .hol{font-size:20px;font-weight:800;background:#fee2e2;color:#991b1b;border-radius:8px;padding:4px 12px}
+.bar .hol{font-size:20px;font-weight:800;background:#FBE7E7;color:#9B2C2C;padding:4px 12px}
 .bar .sp{flex:1}
 .bar .clk{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
 .bar .tag{font-size:16px;font-weight:700;opacity:.75}
-.bar .pv{font-size:20px;font-weight:900;background:#fde68a;color:#78350f;border-radius:8px;padding:4px 12px}
+.bar .pv{font-size:20px;font-weight:800;background:#F3EADF;color:#8A5A0B;padding:4px 12px}
 #fit{flex:1;position:relative;overflow:hidden}
 #inner{position:absolute;top:0;left:0;transform-origin:top left;width:1500px}
 .sheet{background:#fff}
 .err{padding:40px;font-size:28px;color:#b91c1c;font-weight:800}
-#dot{position:absolute;right:10px;bottom:8px;width:10px;height:10px;border-radius:50%;
+#dot{position:absolute;right:10px;bottom:8px;width:10px;height:10px;
      background:#22c55e;opacity:.55;transition:opacity .3s}
 #dot.poll{background:#f59e0b;opacity:.9}
 #dot.off{background:#ef4444;opacity:.9}
 .rblk.conflict{outline:none!important}
 .rblk.temp.conflict{border-color:#d97706!important}
-/* 큰 글씨 강의실 그리드 — 그날 쓰는 강의실만 열로, 수업 있는 시간만 줄로 */
-.tv{display:grid;background:#fff}
-.tv .rh{height:64px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#1e3a5f;
-        border-bottom:3px solid #1e3a5f;background:#f4f7fb;letter-spacing:-.5px}
-.tv .rh small{font-size:18px;font-weight:700;color:#64748b;margin-left:6px}
-.tv .ax{position:relative;border-right:2px solid #e2e8f0}
-.tv .ax span{position:absolute;right:10px;transform:translateY(-50%);font-size:22px;font-weight:800;color:#94a3b8;font-variant-numeric:tabular-nums}
-.tv .ax span.h0{transform:translateY(4px)}
-.tv .col{position:relative;border-left:1px solid #e2e8f0;background-image:linear-gradient(#e2e8f0 1px,transparent 1px),linear-gradient(#f1f5f9 1px,transparent 1px)}
-/* 원장 11/28 「색이 너무 쨍해」 — 과목 색을 옅게 깔고 왼쪽 막대 · 반 이름에만 진하게. 클리닉은 거의 흰 바탕 + 가는 막대. */
-.tv .b{position:absolute;left:6px;right:6px;border-radius:14px;padding:10px 14px 10px 24px;overflow:hidden;
-       color:var(--k);background:var(--bg);border:2px solid var(--bd);box-shadow:inset 9px 0 0 var(--c);
-       display:flex;flex-direction:column;gap:4px}
-.tv .b .n{font-size:28px;font-weight:900;line-height:1.15;letter-spacing:-.8px}
-.tv .b .m{font-size:21px;font-weight:700;color:#475569;font-variant-numeric:tabular-nums}
-.tv .b .tg{align-self:flex-start;font-size:17px;font-weight:900;border-radius:7px;padding:1px 9px;background:var(--c);color:#fff}
-.tv .b.cl{background:var(--bg2);border-color:var(--bd2);box-shadow:inset 4px 0 0 var(--c);padding-left:20px}
-.tv .b.cl .tg{background:var(--c);color:#fff}
-.tv .b.opt{background:#fff;border:3px dashed var(--c);box-shadow:none}
-.tv .b.tmp{background:#fdf6e3;color:#78350f;border:3px dashed #d6a24a;box-shadow:none}
-.tv .b.tmp .tg{background:#d97706;color:#fff}
-.tv .b.off{background:#f1f5f9;color:#64748b;border-color:#e2e8f0;box-shadow:none}
-.tv .b.off .n{text-decoration:line-through}
-.tv .b.off .tg{background:#64748b;color:#fff}
+/* SYSTEM 화면 규칙에 맞춘 강의실 그리드 — 원장 11/28 「우리 UI 디자인과 싱크가 정확히 맞게」.
+   각진 모서리(SYSTEM 전체 규칙 2026-08-31) · 중립 회색 선 · 과목 색은 SYSTEM tokens.SUBJECT(수학 info · 영어 success · 국어 warning · 과학 purple).
+   화면을 확대 · 축소하지 않고 TV 크기 그대로 꽉 채운다(글자는 화면 높이 기준 vh). */
+*,*::before,*::after{border-radius:0!important}
+.tv{display:grid;background:#fff;width:100%}
+.tv .gh{height:5.2vh;display:flex;align-items:center;padding:0 1.2vh;font-size:2.1vh;font-weight:800;letter-spacing:-.02em;
+        color:#fff;background:#26374A;border-right:2px solid #fff}
+.tv .gh.dc{background:#3A5A8C}
+.tv .gh small{font-size:1.5vh;font-weight:600;opacity:.8;margin-left:.8vh}
+.tv .rh{height:5.6vh;display:flex;align-items:center;justify-content:center;font-size:2.7vh;font-weight:800;color:#1A1D21;
+        background:#F8F9FA;border-bottom:2px solid #26374A;border-left:1px solid #E1E5E9;letter-spacing:-.03em}
+.tv .ax{position:relative;border-right:1px solid #E1E5E9;background:#fff}
+.tv .ax span{position:absolute;right:1vh;transform:translateY(-50%);font-size:1.9vh;font-weight:700;color:#727A85;font-variant-numeric:tabular-nums}
+.tv .ax span.h0{transform:translateY(.4vh)}
+.tv .col{position:relative;border-left:1px solid #E1E5E9;background-image:linear-gradient(#E1E5E9 1px,transparent 1px),linear-gradient(#F1F3F5 1px,transparent 1px)}
+.tv .col.dc{background-color:#FBFCFE}
+.tv .col .emp{position:absolute;left:0;right:0;top:45%;text-align:center;font-size:2vh;font-weight:700;color:#C2C8CF}
+.tv .b{position:absolute;left:.5vh;right:.5vh;padding:.9vh 1.2vh .9vh 1.6vh;overflow:hidden;display:flex;flex-direction:column;gap:.35vh;
+       background:var(--bg);border:1px solid var(--bd);border-left:.7vh solid var(--base);color:var(--tx)}
+.tv .b .n{font-size:2.6vh;font-weight:800;line-height:1.15;letter-spacing:-.04em;color:#1A1D21}
+.tv .b .m{font-size:1.95vh;font-weight:600;color:#3E444C;font-variant-numeric:tabular-nums}
+.tv .b .tg{align-self:flex-start;font-size:1.55vh;font-weight:700;padding:.1vh .8vh;background:#fff;color:var(--tx);border:1px solid var(--bd)}
+.tv .b.cl{background:#fff;border-left-width:.35vh}
+.tv .b.cl .tg{background:var(--bg)}
+.tv .b.opt{background:#fff;border:2px dashed var(--base)}
+.tv .b.tmp{background:#F3EADF;border:2px dashed #B07A2E;color:#8A5A0B}
+.tv .b.off{background:#F1F3F5;border-color:#E1E5E9;border-left-color:#98A0AA;color:#727A85}
+.tv .b.off .n{text-decoration:line-through;color:#727A85}
+.tv .b.live{box-shadow:inset 0 0 0 2px #1F4A36}
+.tv .b .tg.lv{background:#1F4A36;color:#fff;border-color:#1F4A36}
 .tv .b.sm .m:last-of-type{display:none}
-.tv .now{position:absolute;left:0;right:0;height:4px;background:#ef4444;z-index:5}
-.tv .now::before{content:"";position:absolute;left:-7px;top:-6px;width:16px;height:16px;border-radius:50%;background:#ef4444}
-.tv .none{grid-column:1/-1;padding:120px 0;text-align:center;font-size:40px;font-weight:900;color:#94a3b8}
 </style>
 </head>
 <body>
@@ -164,54 +167,66 @@ function targetDate(){
   return (ROTATE && flip % 2) ? addDays(t,1) : t;      // 번갈아 보기
 }
 
-/* 큰 글씨 강의실 그리드 — 원장 11/28 「더 깔끔하고 글씨가 크게 잘 보이게」.
+/* SYSTEM 규칙 강의실 그리드 — 원장 11/28 「대치더올은 왜 없나 · 여백이 너무 많다 · 빨간 줄은 왜 · 둥근 칸 말고 우리 UI 와 맞게」.
+   · 다올105 · 대치더올 강의실을 늘 같은 자리에 보인다(수업이 없으면 「수업 없음」).
+   · TV 화면 크기 그대로 꽉 채운다(확대 · 축소 없음, 1시간 높이 = 남은 높이 ÷ 시간 수).
+   · 빨간 「지금」 선 대신 지금 하는 수업 칸에 「지금 수업 중」 표시.
    XO.assignForDate 가 돌려준 그날 수업(SYSTEM) + 월간 일정 덧칸(직보 · 설명회 · 휴강 · 이날만 지정)을 그대로 쓴다. */
-/* 반마다 한 색 — SYSTEM 주간 시간표와 같은 차분한 12색(원장 11/28 「쨍하지 않게」). 그날 시작 순으로 돌려 쓴다. */
-const PALETTE = ["#3f8a80", "#8670b8", "#5a7cc0", "#bf7448", "#a88a3c", "#b85d6c", "#4f8f62", "#6a6cb0", "#4a8d9c", "#a6658a", "#6b7787", "#8f7650"];
+const TONE = {   // SYSTEM src/app/_ui/tokens.ts 과목 색(SUBJECT) 그대로
+  "수학": { tx: "#2C4A78", bg: "#E7EDF7", base: "#3A5A8C", bd: "#CBD9EC" },
+  "영어": { tx: "#276749", bg: "#E3F0E7", base: "#3E7C63", bd: "#CFE2D6" },
+  "국어": { tx: "#8A5A0B", bg: "#F3EADF", base: "#B07A2E", bd: "#EADFCB" },
+  "과학": { tx: "#5B3B8C", bg: "#EFE6F7", base: "#7C5BB8", bd: "#DFD0EE" },
+};
+const TONE_X = { tx: "#565D66", bg: "#F1F3F5", base: "#98A0AA", bd: "#E1E5E9" };
+const toneVars = s => { const o = TONE[s] || TONE_X; return `--tx:${o.tx};--bg:${o.bg};--base:${o.base};--bd:${o.bd}`; };
 const cleanName = s => String(s || "").replace(/\s*\(\s*조교\s*\)|조교\s*/g, "").replace(/^\s*2\dY\s*/, "").replace(/\s*-\s*정규\s*$|\s*정규반?\s*$/, "").replace(/\s+/g, " ").trim();
 const hhmm = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
-/* 색 섞기(흰색 · 검정과) — CSS color-mix 를 못 쓰는 오래된 TV 브라우저용 */
-const mixHex = (hex, pct, base) => { const h = hex.replace("#", ""), b = base === "black" ? 0 : 255;
-  return "#" + [0, 2, 4].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * pct + b * (1 - pct)).toString(16).padStart(2, "0")).join(""); };
-const toneVars = c => `--c:${c};--bg:${mixHex(c, .17)};--bd:${mixHex(c, .38)};--bg2:${mixHex(c, .04)};--bd2:${mixHex(c, .24)};--k:${mixHex(c, .8, "black")}`;
+const ALWAYS = ["본관1", "본관2", "본관3", "스터디홀", "대치1", "대치2", "대치클리닉"];   // 늘 보이는 강의실(복도 · 상담실은 쓸 때만)
 function bigGridHTML(d, A){
-  const blocks = [];
-  const order = [...new Set(A.items.slice().sort((p, q) => p.s.start - q.s.start || String(p.c.course_name).localeCompare(String(q.c.course_name), "ko")).map(it => it.c.id))];
-  const colorOf = id => PALETTE[Math.max(0, order.indexOf(id)) % PALETTE.length];
-  // 교실이 「미정」이라 빈 방을 추천해 놓은 칸 — SYSTEM 원래 값으로 가린다(월간 일정 덧칸은 제외)
   const tbd = it => (it.c.sessions || []).some(s => s.dow === dowOf(d) && toMin(s.start) === it.s.start && !ROOM_KEYS.includes(s.room));
-  A.items.forEach(it => blocks.push({ room: it.room, a: it.s.start, b: it.s.end,
-    kind: it.off ? "off" : it.s.type === "정규" ? "les" : it.s.type === "신청" ? "opt" : "cl",
-    name: cleanName(it.c.course_name), who: cleanName(it.c.teacher), c: colorOf(it.c.id),
-    tag: it.off ? "휴강" : it.overridden ? "이날만 이 방" : it.s.type === "신청" ? "신청자만" : tbd(it) ? "교실 미정" : (it.s.type === "정규" ? "" : "클리닉") }));
-  (A.temps || []).forEach(b => blocks.push({ room: b.room, a: b.start, b: b.end, kind: "tmp", name: cleanName(b.name), who: b.teacher || "",
-    c: "#c98a2e", tag: RM_tempLabel(b.type) }));
+  const nowM = d === todayISO() ? (() => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); })() : null;
+  const blocks = [];
+  A.items.forEach(it => {
+    const live = !it.off && nowM != null && it.s.start <= nowM && nowM < it.s.end;
+    blocks.push({ room: it.room, a: it.s.start, b: it.s.end, subj: it.c.subject, live,
+      kind: it.off ? "off" : it.s.type === "정규" ? "les" : it.s.type === "신청" ? "opt" : "cl",
+      name: cleanName(it.c.course_name), who: cleanName(it.c.teacher),
+      tag: it.off ? "휴강" : live ? "지금 수업 중" : it.overridden ? "이날만 이 방" : it.s.type === "신청" ? "신청자만" : tbd(it) ? "교실 미정" : (it.s.type === "정규" ? "" : "클리닉") });
+  });
+  (A.temps || []).forEach(b => blocks.push({ room: b.room, a: b.start, b: b.end, kind: "tmp", name: cleanName(b.name), who: cleanName(b.teacher || ""), tag: RM_tempLabel(b.type) }));
   const shown = blocks.filter(x => x.room && x.a != null);
-  if (!shown.length) return `<div class="tv"><div class="none">${d === todayISO() ? "오늘은" : "이날은"} 수업이 없습니다</div></div>`;
-  const rooms = CLASS_ROOMS.filter(r => shown.some(x => x.room === r.key));
-  const from = Math.floor(Math.min(...shown.map(x => x.a)) / 60) * 60;
-  const to = Math.ceil(Math.max(...shown.map(x => x.b)) / 60) * 60;
-  const hours = (to - from) / 60, PX = Math.max(78, Math.min(140, Math.floor(760 / hours)));
-  const H = hours * PX + 16;
-  const lab = r => { const m = /^대치더올\s*(.*)$/.exec(r.label); return m ? `${m[1]}<small>대치</small>` : r.label; };
-  let html = `<div class="tv" style="grid-template-columns:84px repeat(${rooms.length},1fr)"><div class="rh"></div>`;
-  rooms.forEach(r => html += `<div class="rh">${lab(r)}</div>`);
+  const rooms = CLASS_ROOMS.filter(r => ALWAYS.includes(r.key) || shown.some(x => x.room === r.key));
+  const daol = rooms.filter(r => r.bldg !== "대치더올"), dc = rooms.filter(r => r.bldg === "대치더올");
+  const cols = [...daol, ...dc];
+  const from = shown.length ? Math.floor(Math.min(...shown.map(x => x.a)) / 60) * 60 : 14 * 60;
+  const to = shown.length ? Math.ceil(Math.max(...shown.map(x => x.b)) / 60) * 60 : 22 * 60;
+  const hours = Math.max(1, (to - from) / 60);
+  const vh = window.innerHeight / 100, box = document.getElementById("fit");
+  const head = 5.2 * vh + 5.6 * vh + 4;
+  const PX = Math.max(36, Math.floor(((box ? box.clientHeight : window.innerHeight) - head - 2 * vh) / hours));
+  const H = hours * PX + 2 * vh;
+  const lab = r => r.label.replace(/^대치더올\s*/, "");
+  let html = `<div class="tv" style="grid-template-columns:7vh repeat(${cols.length},1fr)"><div class="gh" style="background:#fff"></div>`;
+  if (daol.length) html += `<div class="gh" style="grid-column:span ${daol.length}">다올105<small>미사</small></div>`;
+  if (dc.length) html += `<div class="gh dc" style="grid-column:span ${dc.length}">대치더올<small>수학 · 과학</small></div>`;
+  html += `<div class="rh" style="border-left:none"></div>`;
+  cols.forEach(r => html += `<div class="rh">${lab(r)}</div>`);
   html += `<div class="ax" style="height:${H}px">`;
   for (let m = from; m <= to; m += 60) html += `<span class="${m === from ? "h0" : ""}" style="top:${(m - from) / 60 * PX}px">${m / 60}시</span>`;
   html += `</div>`;
-  const nowM = (() => { if (d !== todayISO()) return null; const n = new Date(); const v = n.getHours() * 60 + n.getMinutes(); return v >= from && v <= to ? v : null; })();
-  rooms.forEach(r => {
-    html += `<div class="col" style="height:${H}px;background-size:100% ${PX}px,100% ${PX}px;background-position:0 0,0 ${PX / 2}px">`;   // 정시 줄 + 30분 눈금
+  cols.forEach(r => {
     const list = shown.filter(x => x.room === r.key).sort((p, q) => p.a - q.a);
+    html += `<div class="col ${r.bldg === "대치더올" ? "dc" : ""}" style="height:${H}px;background-size:100% ${PX}px,100% ${PX}px;background-position:0 0,0 ${PX / 2}px">`;
+    if (!list.length) html += `<div class="emp">수업 없음</div>`;
     list.forEach(x => {
-      const top = (x.a - from) / 60 * PX + 3, h = (x.b - x.a) / 60 * PX - 6;
-      html += `<div class="b ${x.kind === "les" ? "" : x.kind} ${h < 100 ? "sm" : ""}" style="${toneVars(x.c)};top:${top}px;height:${h}px">` +
+      const top = (x.a - from) / 60 * PX + 2, h = (x.b - x.a) / 60 * PX - 4;
+      html += `<div class="b ${x.kind === "les" ? "" : x.kind} ${x.live ? "live" : ""} ${h < 11 * vh ? "sm" : ""}" style="${toneVars(x.subj)};top:${top}px;height:${h}px">` +
         `<div class="n">${esc(x.name)}</div>` +
-        (x.tag ? `<span class="tg">${esc(x.tag)}</span>` : "") +
+        (x.tag ? `<span class="tg ${x.live ? "lv" : ""}">${esc(x.tag)}</span>` : "") +
         `<div class="m">${hhmm(x.a)}–${hhmm(x.b)}</div>` +
         (x.who ? `<div class="m">${esc(x.who)} 선생님</div>` : "") + `</div>`;
     });
-    if (nowM != null) html += `<div class="now" style="top:${(nowM - from) / 60 * PX}px"></div>`;
     html += `</div>`;
   });
   return html + `</div>`;
@@ -234,6 +249,10 @@ function paint(){
 /* 화면 크기에 맞춰 통째로 확대·축소 — TV 해상도가 뭐든 꽉 찬다 */
 function fit(){
   const box = document.getElementById("fit"), inner = document.getElementById("inner");
+  if (inner.querySelector(".tv")) {   // SYSTEM 규칙 그리드는 TV 크기 그대로 그린다(여백 없음)
+    inner.style.width = box.clientWidth + "px"; inner.style.transform = "none"; inner.style.left = "0px"; inner.style.top = "0px";
+    return;
+  }
   inner.style.width = BASEW + "px";
   inner.style.transform = "none"; inner.style.left = "0px";
   const w = BASEW, h = inner.offsetHeight;
@@ -243,7 +262,7 @@ function fit(){
   inner.style.left = Math.max(0, (box.clientWidth - w*k) / 2) + "px";
   inner.style.top  = Math.max(0, (box.clientHeight - h*k) / 2) + "px";
 }
-addEventListener("resize", ()=>{ fit(); setTimeout(fit,250); });
+addEventListener("resize", ()=>{ if(ok) paint(); else fit(); });
 
 async function pull(){
   if(pulling){ again = true; return; }
