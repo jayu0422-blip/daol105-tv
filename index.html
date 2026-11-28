@@ -38,6 +38,31 @@ body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;color:#1f2430
 #dot.off{background:#ef4444;opacity:.9}
 .rblk.conflict{outline:none!important}
 .rblk.temp.conflict{border-color:#d97706!important}
+/* 큰 글씨 강의실 그리드 — 그날 쓰는 강의실만 열로, 수업 있는 시간만 줄로 */
+.tv{display:grid;background:#fff}
+.tv .rh{height:64px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#1e3a5f;
+        border-bottom:3px solid #1e3a5f;background:#f4f7fb;letter-spacing:-.5px}
+.tv .rh small{font-size:18px;font-weight:700;color:#64748b;margin-left:6px}
+.tv .ax{position:relative;border-right:2px solid #e2e8f0}
+.tv .ax span{position:absolute;right:10px;transform:translateY(-50%);font-size:22px;font-weight:800;color:#94a3b8;font-variant-numeric:tabular-nums}
+.tv .ax span.h0{transform:translateY(4px)}
+.tv .col{position:relative;border-left:1px solid #e2e8f0;background-image:linear-gradient(#e2e8f0 1px,transparent 1px)}
+.tv .b{position:absolute;left:6px;right:6px;border-radius:14px;padding:10px 14px;color:#fff;background:var(--c);overflow:hidden;
+       display:flex;flex-direction:column;gap:4px;box-shadow:0 2px 4px rgba(15,23,42,.12)}
+.tv .b .n{font-size:28px;font-weight:900;line-height:1.15;letter-spacing:-.8px}
+.tv .b .m{font-size:21px;font-weight:700;opacity:.92;font-variant-numeric:tabular-nums}
+.tv .b .tg{align-self:flex-start;font-size:17px;font-weight:900;border-radius:7px;padding:1px 9px;background:rgba(255,255,255,.25)}
+.tv .b.cl{background:color-mix(in srgb,var(--c) 16%,#fff);color:color-mix(in srgb,var(--c) 82%,#000);box-shadow:inset 8px 0 0 var(--c);padding-left:20px}
+.tv .b.cl .tg{background:var(--c);color:#fff}
+.tv .b.tmp{background:#fef3c7;color:#78350f;border:3px dashed #d97706;box-shadow:none}
+.tv .b.tmp .tg{background:#d97706;color:#fff}
+.tv .b.off{background:#e2e8f0;color:#64748b;box-shadow:none}
+.tv .b.off .n{text-decoration:line-through}
+.tv .b.off .tg{background:#64748b;color:#fff}
+.tv .b.sm .m:last-of-type{display:none}
+.tv .now{position:absolute;left:0;right:0;height:4px;background:#ef4444;z-index:5}
+.tv .now::before{content:"";position:absolute;left:-7px;top:-6px;width:16px;height:16px;border-radius:50%;background:#ef4444}
+.tv .none{grid-column:1/-1;padding:120px 0;text-align:center;font-size:40px;font-weight:900;color:#94a3b8}
 </style>
 </head>
 <body>
@@ -129,6 +154,49 @@ function targetDate(){
   return (ROTATE && flip % 2) ? addDays(t,1) : t;      // 번갈아 보기
 }
 
+/* 큰 글씨 강의실 그리드 — 원장 11/28 「더 깔끔하고 글씨가 크게 잘 보이게」.
+   XO.assignForDate 가 돌려준 그날 수업(SYSTEM) + 월간 일정 덧칸(직보 · 설명회 · 휴강 · 이날만 지정)을 그대로 쓴다. */
+const SUBJ_TV = { "영어": "#15803d", "수학": "#1d4ed8", "국어": "#c2410c", "과학": "#7c3aed" };
+const cleanName = s => String(s || "").replace(/^\s*2\dY\s*/, "").replace(/\s*-\s*정규\s*$|\s*정규반?\s*$/, "").replace(/\s+/g, " ").trim();
+const hhmm = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
+function bigGridHTML(d, A){
+  const blocks = [];
+  A.items.forEach(it => blocks.push({ room: it.room, a: it.s.start, b: it.s.end, kind: it.off ? "off" : (it.s.type === "정규" ? "les" : "cl"),
+    name: cleanName(it.c.course_name), who: it.c.teacher, c: SUBJ_TV[it.c.subject] || "#475569",
+    tag: it.off ? "휴강" : it.overridden ? "이날만 이 방" : (it.s.type === "정규" ? "" : "클리닉") }));
+  (A.temps || []).forEach(b => blocks.push({ room: b.room, a: b.start, b: b.end, kind: "tmp", name: cleanName(b.name), who: b.teacher || "",
+    c: "#d97706", tag: RM_tempLabel(b.type) }));
+  const shown = blocks.filter(x => x.room && x.a != null);
+  if (!shown.length) return `<div class="tv"><div class="none">오늘은 수업이 없습니다</div></div>`;
+  const rooms = CLASS_ROOMS.filter(r => shown.some(x => x.room === r.key));
+  const from = Math.floor(Math.min(...shown.map(x => x.a)) / 60) * 60;
+  const to = Math.ceil(Math.max(...shown.map(x => x.b)) / 60) * 60;
+  const hours = (to - from) / 60, PX = Math.max(78, Math.min(140, Math.floor(760 / hours)));
+  const H = hours * PX + 16;
+  const lab = r => { const m = /^대치더올\s*(.*)$/.exec(r.label); return m ? `${m[1]}<small>대치</small>` : r.label; };
+  let html = `<div class="tv" style="grid-template-columns:84px repeat(${rooms.length},1fr)"><div class="rh"></div>`;
+  rooms.forEach(r => html += `<div class="rh">${lab(r)}</div>`);
+  html += `<div class="ax" style="height:${H}px">`;
+  for (let m = from; m <= to; m += 60) html += `<span class="${m === from ? "h0" : ""}" style="top:${(m - from) / 60 * PX}px">${m / 60}시</span>`;
+  html += `</div>`;
+  const nowM = (() => { if (d !== todayISO()) return null; const n = new Date(); const v = n.getHours() * 60 + n.getMinutes(); return v >= from && v <= to ? v : null; })();
+  rooms.forEach(r => {
+    html += `<div class="col" style="height:${H}px;background-size:100% ${PX}px">`;
+    const list = shown.filter(x => x.room === r.key).sort((p, q) => p.a - q.a);
+    list.forEach(x => {
+      const top = (x.a - from) / 60 * PX + 3, h = (x.b - x.a) / 60 * PX - 6;
+      html += `<div class="b ${x.kind === "les" ? "" : x.kind} ${h < 100 ? "sm" : ""}" style="--c:${x.c};top:${top}px;height:${h}px">` +
+        `<div class="n">${esc(x.name)}</div>` +
+        (x.tag ? `<span class="tg">${esc(x.tag)}</span>` : "") +
+        `<div class="m">${hhmm(x.a)}–${hhmm(x.b)}</div>` +
+        (x.who ? `<div class="m">${esc(x.who)} 선생님</div>` : "") + `</div>`;
+    });
+    if (nowM != null) html += `<div class="now" style="top:${(nowM - from) / 60 * PX}px"></div>`;
+    html += `</div>`;
+  });
+  return html + `</div>`;
+}
+
 function paint(){
   const d = targetDate();
   let A;
@@ -138,7 +206,7 @@ function paint(){
   document.getElementById("bd").textContent = md(d);
   document.getElementById("bw").textContent = "(" + dowOf(d) + ")" + (d===todayISO() ? "" : " · 내일");
   document.getElementById("inner").innerHTML =
-    `<div class="sheet">${dayGridHTML({day:A.day, title:`${md(d)} (${dowOf(d)}) 강의실 배정`, items:A.items, temps:A.temps})}</div>`;
+    `<div class="sheet">${bigGridHTML(d, A)}</div>`;
   shown = d;
   fit(); setTimeout(fit, 120);
 }
@@ -191,6 +259,7 @@ function startRealtime(){
 /* 1분마다 데이터 다시 읽고, 자정이 지나면 날짜가 저절로 넘어간다 */
 setInterval(pull, 30*1000);   // SYSTEM 시간표는 30초마다 다시 읽는다(SYSTEM 쪽 캐시도 30초)
 setInterval(()=>{ if(!PIN && shown && shown !== targetDate()) paint(); }, 20*1000);
+setInterval(()=>{ if(ok) paint(); }, 60*1000);   // 빨간 「지금」 선을 1분마다 옮긴다
 if(ROTATE) setInterval(()=>{ flip++; paint(); }, ROTATE*1000);
 /* 하루 한 번(새벽 4시대) 통째로 새로고침 — 코드가 바뀌어도 알아서 따라온다 */
 if(!EMBED) setInterval(()=>{ const n=new Date(); if(n.getHours()===4 && n.getMinutes()<2) location.reload(); }, 60*1000);
