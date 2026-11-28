@@ -58,11 +58,11 @@ body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;color:#1f2430
 .tv .col.dc{background-color:#FBFCFE}
 .tv .col .emp{position:absolute;left:0;right:0;top:45%;text-align:center;font-size:2vh;font-weight:700;color:#C2C8CF}
 .tv .b{position:absolute;left:.5vh;right:.5vh;padding:.9vh 1.2vh .9vh 1.6vh;overflow:hidden;display:flex;flex-direction:column;gap:.35vh;
-       background:var(--bg);border:1px solid var(--bd);border-left:.7vh solid var(--base);color:var(--tx)}
+       background:var(--bg);border:0;color:var(--tx)}   /* 원장 11/28: 왼쪽 막대 없이 배경색만 사각으로 */
 .tv .b .n{font-size:2.6vh;font-weight:800;line-height:1.15;letter-spacing:-.04em;color:#1A1D21}
 .tv .b .m{font-size:1.95vh;font-weight:600;color:#3E444C;font-variant-numeric:tabular-nums}
 .tv .b .tg{align-self:flex-start;font-size:1.55vh;font-weight:700;padding:.1vh .8vh;background:#fff;color:var(--tx);border:1px solid var(--bd)}
-.tv .b.cl{background:#fff;border-left-width:.35vh}
+.tv .b.cl{background:#fff;border:1px solid var(--bd)}   /* 클리닉 = 흰 칸 + 과목 색 테두리 */
 .tv .b.cl .tg{background:var(--bg)}
 .tv .b.opt{background:#fff;border:2px dashed var(--base)}
 .tv .b.tmp{background:#F3EADF;border:2px dashed #B07A2E;color:#8A5A0B}
