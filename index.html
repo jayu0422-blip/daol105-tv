@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
+<!-- 글꼴 — SYSTEM(src/app/layout.tsx)과 같은 Pretendard Variable 을 같은 주소에서 불러온다(원장 11/28 「사이드바와 같은 폰트」) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <title>다올105 강의실 시간표</title>
 <!-- 스마트 TV 전용 보기 화면. 오늘 강의실 시간표만 보여 주고 입력·이동 링크가 없다.
      2026-11-28 원장: 반 · 시간 · 강의실은 SYSTEM 반 시간표 하나가 기준(/api/ext/hallway) — SYSTEM 「복도 시간표」에서
@@ -19,15 +21,15 @@
 :root{--navy:#1B2A3A;--line:#E1E5E9}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;background:#fff;cursor:none}
-body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;color:#1f2430}
+body{font-family:"Pretendard Variable",Pretendard,system-ui,-apple-system,sans-serif;color:#1A1D21}
 #stage{position:absolute;inset:0;display:flex;flex-direction:column}
 .bar{flex:0 0 auto;display:flex;align-items:center;gap:18px;padding:14px 26px;
      background:var(--navy);color:#fff}
-.bar .d{font-size:34px;font-weight:900;letter-spacing:-1px}
+.bar .d{font-size:34px;font-weight:800;letter-spacing:-1px}
 .bar .w{font-size:26px;font-weight:800;opacity:.9}
 .bar .hol{font-size:20px;font-weight:800;background:#FBE7E7;color:#9B2C2C;padding:4px 12px}
 .bar .sp{flex:1}
-.bar .clk{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
+.bar .clk{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
 .bar .tag{font-size:16px;font-weight:700;opacity:.75}
 .bar .pv{font-size:20px;font-weight:800;background:#F3EADF;color:#8A5A0B;padding:4px 12px}
 #fit{flex:1;position:relative;overflow:hidden}
